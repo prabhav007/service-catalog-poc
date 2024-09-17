@@ -44,9 +44,9 @@ metadata:
 spec:
   project: my-department-proj
   source:
-    chart: charts/spring-boot-poc
     repoURL: https://github.com/prabhav007/helm-poc.git
     targetRevision: HEAD
+    path: charts/spring-boot-poc
     helm:
       releaseName: spring-boot-poc
       valueFiles:
