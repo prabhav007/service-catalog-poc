@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: my-department-proj
+  namespace: argocd
+  # Finalizer that ensures that project is not deleted until it is not referenced by any application
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Spring Boot POC
+  # Allow manifests to deploy from any Git repos
+  sourceRepos:
+    - '*'
+  # Only permit applications to deploy to the guestbook namespace in the same cluster
+  destinations:
+    - namespace: app-namespace
+      server: https://kubernetes.default.svc
+  # Deny all cluster-scoped resources from being created, except for Namespace
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+  # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+    - group: ''
+      kind: NetworkPolicy
+#  roles:
+#    # A role which provides read-only access to all applications in the project
+#    - name: read-only
+#      description: Read-only privileges to my-project
+#      policies:
+#        - p, proj:spring-boot-poc:admin, applications, *, spring-boot-poc/*, allow
+#      groups:
+#        - my-oidc-group
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spring-boot-poc
+  namespace: argocd
+spec:
+  project: my-department-proj
+  source:
+    chart: spring-boot-poc
+    repoURL: https://github.com/prabhav007/helm-poc/charts
+    targetRevision: HEAD
+    helm:
+      releaseName: spring-boot-poc
+      valueFiles:
+        - values.yaml
+      ignoreMissingValueFiles: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-namespace
